@@ -77,8 +77,6 @@ En el contexto de Sistemas UltraSeguros S.A., un fallo total del sistema implica
 
 Es preferible una degradación elegante (Nivel 2 o 3) que un fallo catastrófico (Error 500 o Timeouts), ya que permite mantener la confianza del cliente al informar proactivamente sobre el estado del sistema.
 
-## 4. Diagrama de la Arquitectura
-
 ## 3. Diagrama de la Arquitectura (Vista de Componentes)
 
 ```text
@@ -128,7 +126,7 @@ Es preferible una degradación elegante (Nivel 2 o 3) que un fallo catastrófico
 - **Ruteo Dinámico**: Se selecciona el ARN desde las variables de entorno y se invoca la Lambda nivel1, nivel2 o nivel3.
 - **Respuesta**: El sistema devuelve un mensaje dinámico. En el Nivel 3, se discrimina si la petición fue exitosa o fallida para responder con los mensajes literales exigidos por el reto
 
-## 5. Tácticas de Arquitectura
+## 4. Tácticas de Arquitectura
 
 Se implementaron tácticas específicas para garantizar que el sistema cumpla con los objetivos de recuperación automática:
 
@@ -150,3 +148,22 @@ El sistema es sin estado (stateless) respecto a errores pasados; cada minuto se 
 ### D. Observabilidad
 
 Se implementó un logging estructurado que registra: Slot de tiempo, Errores detectados y Nivel asignado. Esto permite auditar las transiciones mediante CloudWatch Logs para validar que el sistema cumplió con los 6 minutos de prueba de forma dinámica.
+
+## 5. Logging y Observabilidad
+
+- Todas las Lambdas usan el logging estándar de AWS Lambda y se asocian automáticamente a grupos de logs de CloudWatch: `AWS/Lambda` -> `LogGroup` generado por nombre de función (por ejemplo, `/aws/lambda/entrada`).
+- El código de `lambda/entrada/main.py` inicializa un logger global:
+
+```python
+import logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+```
+
+- A lo largo del handler principal (`lambda_handler`) se emiten eventos de log:
+  - `logger.info(...)` para ruteos exitosos y decisiones de nivel
+  - `logger.error(...)` para excepciones de ruteo y errores internos.
+
+- En caso de error en el router, la Lambda devuelve un HTTP 500 y escribe el mensaje dentro de `dev_log`, además del log de error que se puede revisar en CloudWatch.
+
+- Si se requiere mayor granularidad, se puede aumentar `logger.setLevel(logging.DEBUG)` y agregar `logger.debug(...)` a los pasos de parsing y estado.
