@@ -165,5 +165,3 @@ logger.setLevel(logging.INFO)
   - `logger.error(...)` para excepciones de ruteo y errores internos.
 
 - En caso de error en el router, la Lambda devuelve un HTTP 500 y escribe el mensaje dentro de `dev_log`, además del log de error que se puede revisar en CloudWatch.
-
-- Si se requiere mayor granularidad, se puede aumentar `logger.setLevel(logging.DEBUG)` y agregar `logger.debug(...)` a los pasos de parsing y estado.
