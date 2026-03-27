@@ -29,6 +29,15 @@ Para desplegar y ejecutar esta solución correctamente, se requieren los siguien
 - Una tabla denominada `EstadoSistema`
 - Partition Key: `id` (Tipo: String)
 
+##### ⚙️ Configuración Inicial de la Tabla
+Para que el script de pruebas `k6/reto3.js` funcione según la lógica de degradación esperada, se debe crear un ítem inicial en la tabla `EstadoSistema` con los siguientes atributos exactos:
+
+| Atributo | Tipo   | Valor Inicial | Descripción |
+| :---     | :---   | :---          | :---        |
+| **id** | String | `config`      | Identificador único del estado del sistema. |
+| **errors** | Number | `0`            | Contador inicial de fallos. |
+| **level** | Number | `1`            | Nivel de servicio inicial (Full Service). |
+
 #### IAM (Identity and Access Management)
 
 - El rol de ejecución de la Lambda `entrada` debe tener permisos para:
