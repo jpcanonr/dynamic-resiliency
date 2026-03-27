@@ -42,7 +42,7 @@ Para desplegar y ejecutar esta solución correctamente, se requieren los siguien
 - **Handler de Lambda**: Asegurarse de que el Runtime Handler esté configurado como `main.lambda_handler` (o el nombre correspondiente a su archivo `.py`)
 - **Timeout**: Se recomienda configurar un timeout de al menos 10 segundos para la Lambda `entrada` para absorber la latencia de las invocaciones síncronas
 
-## 1. Decisiones de Arquitectura
+## 2. Decisiones de Arquitectura
 
 La solución se basa en una arquitectura **Serverless Event-Driven**, seleccionada por su capacidad de escalado automático y su modelo de pago por uso, ideal para manejar picos de tráfico inesperados.
 
@@ -58,7 +58,7 @@ La solución se basa en una arquitectura **Serverless Event-Driven**, selecciona
 - **Consistencia Atómica**: Para evitar condiciones de carrera (Race Conditions) durante picos de carga, se implementó la instrucción ADD de DynamoDB. Esto garantiza que cada error reportado por el script K6 sea contado exactamente una vez, permitiendo transiciones de nivel precisas.
 - **Desacoplamiento por Variables de Entorno**: Se evitó el hard-coding de ARNs de Lambda. El Router resuelve el destino mediante variables de entorno (NIVEL_X_ARN), permitiendo que los servicios de nivel evolucionen, se renombren o cambien de versión sin necesidad de modificar ni desplegar el código del Router.
 
-## 2. Atributo de Calidad más Importante
+## 3. Atributo de Calidad más Importante
 
 El atributo priorizado es la **Resiliencia** (Disponibilidad bajo degradación).
 
@@ -68,7 +68,7 @@ En el contexto de Sistemas UltraSeguros S.A., un fallo total del sistema implica
 
 Es preferible una degradación elegante (Nivel 2 o 3) que un fallo catastrófico (Error 500 o Timeouts), ya que permite mantener la confianza del cliente al informar proactivamente sobre el estado del sistema.
 
-## 3. Diagrama de la Arquitectura
+## 4. Diagrama de la Arquitectura
 
 La representación visual del flujo de datos y control es la siguiente:
 
@@ -80,7 +80,7 @@ La representación visual del flujo de datos y control es la siguiente:
 - **Ruteo Dinámico**: Se selecciona el ARN desde las variables de entorno y se invoca la Lambda nivel1, nivel2 o nivel3.
 - **Respuesta**: El cliente recibe la respuesta del nivel activo.
 
-## 4. Tácticas de Arquitectura
+## 5. Tácticas de Arquitectura
 
 Se implementaron tácticas específicas para garantizar que el sistema cumpla con los objetivos de recuperación automática:
 
