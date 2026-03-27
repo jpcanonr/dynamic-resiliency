@@ -15,7 +15,7 @@ Para desplegar y ejecutar esta solución correctamente, se requieren los siguien
 #### Amazon API Gateway (HTTP API)
 
 - Debe tener configurada una ruta ANY `/servicio`
-- Debe estar integrada con la Lambda `entrada`
+- Debe tener una integración con la Lambda `entrada`
 
 #### AWS Lambda (4 funciones)
 
@@ -79,15 +79,53 @@ Es preferible una degradación elegante (Nivel 2 o 3) que un fallo catastrófico
 
 ## 4. Diagrama de la Arquitectura
 
-La representación visual del flujo de datos y control es la siguiente:
+## 3. Diagrama de la Arquitectura (Vista de Componentes)
+
+```text
+                                  +-----------------------+
+                                  |   Script de Pruebas   |
+                                  |      (k6 Runner)      |
+                                  +-----------+-----------+
+                                              |
+                                              | (HTTP POST / JSON)
+                                              v
+                                  +-----------+-----------+
+                                  |   Amazon API Gateway  |
+                                  |     (Punto de Entrada)|
+                                  +-----------+-----------+
+                                              |
+                                              v
+      +---------------------------------------+---------------------------------------+
+      |                                                                               |
+      |                          Lambda "entrada" (Router)                            |
+      |   1. Procesa Payload (error: true/false)                                      |
+      |   2. Registra métrica atómica en DynamoDB                                     |
+      |   3. Consulta salud del minuto anterior                                       |
+      |   4. Selecciona ARN de destino vía Variables de Entorno                       |
+      |                                                                               |
+      +-------+-------------------------------+-------------------------------+-------+
+              |                               |                               |
+      (Si Nivel = 1)                  (Si Nivel = 2)                  (Si Nivel = 3)
+              v                               v                               v
+    +---------+---------+           +---------+---------+           +---------+---------+
+    |  Lambda "nivel1"  |           |  Lambda "nivel2"  |           |  Lambda "nivel3"  |
+    |  (Full Service)   |           | (Modo Degradado)  |           | (Mantenimiento)   |
+    +-------------------+           +-------------------+           +---------+---------+
+                                                                              |
+                                                                    +---------+---------+
+      +-----------------------+                                     | Mensajes Reto:    |
+      |   Amazon DynamoDB     | <-----------------------------------+ "Bajo mant."      |
+      |  (Tabla: Estado)      |      (Estado de Salud Global)       | "Op. al mínimo"   |
+      +-----------------------+                                     +-------------------+
 
 ### Flujo de la solución
 
 - **Ingreso**: API Gateway recibe el POST desde K6.
-- **Evaluación**: Lambda entrada extrae el campo error y actualiza el "Bucket" de tiempo en DynamoDB.
+- **Registro**: La Lambda entrada recibe el evento y utiliza Contadores Atómicos para incrementar los fallos en la tabla EstadoSistema sin colisiones de escritura.
+- **Evaluación**: Basándose en los errores acumulados en el "bucket" de tiempo anterior, el Router invoca síncronamente la Lambda de nivel correspondiente.
 - **Consulta de Salud**: El Router lee los errores acumulados en la ventana de tiempo anterior.
 - **Ruteo Dinámico**: Se selecciona el ARN desde las variables de entorno y se invoca la Lambda nivel1, nivel2 o nivel3.
-- **Respuesta**: El cliente recibe la respuesta del nivel activo.
+- **Respuesta**: El sistema devuelve un mensaje dinámico. En el Nivel 3, se discrimina si la petición fue exitosa o fallida para responder con los mensajes literales exigidos por el reto
 
 ## 5. Tácticas de Arquitectura
 
