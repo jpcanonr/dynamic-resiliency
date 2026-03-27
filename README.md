@@ -117,6 +117,7 @@ Es preferible una degradación elegante (Nivel 2 o 3) que un fallo catastrófico
       |   Amazon DynamoDB     | <-----------------------------------+ "Bajo mant."      |
       |  (Tabla: Estado)      |      (Estado de Salud Global)       | "Op. al mínimo"   |
       +-----------------------+                                     +-------------------+
+```
 
 ### Flujo de la solución
 
