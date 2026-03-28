@@ -145,10 +145,6 @@ El sistema actúa como un disyuntor:
 
 El sistema es sin estado (stateless) respecto a errores pasados; cada minuto se evalúa de nuevo. Si en el minuto N hubo 10 errores, pero en el minuto N+1 hubo 0, la arquitectura transiciona automáticamente de regreso al Nivel 1 sin intervención humana, basándose en la métrica fresca de DynamoDB.
 
-### D. Observabilidad
-
-Se implementó un logging estructurado que registra: Slot de tiempo, Errores detectados y Nivel asignado. Esto permite auditar las transiciones mediante CloudWatch Logs para validar que el sistema cumplió con los 6 minutos de prueba de forma dinámica.
-
 ## 5. Logging y Observabilidad
 
 - Todas las Lambdas usan el logging estándar de AWS Lambda y se asocian automáticamente a grupos de logs de CloudWatch: `AWS/Lambda` -> `LogGroup` generado por nombre de función (por ejemplo, `/aws/lambda/entrada`).
